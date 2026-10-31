@@ -395,9 +395,12 @@ function gen(m){const d=card(m,'NOISE / GENERATOR');d.append(E('div','w','Kecilk
 function pre(m){const d=card(m,'PRESETS');for(let i=1;i<=5;i++){const r=E('div','r'),a=E('button','btn','Load'),b=E('button','btn','Save');r.append(E('label','','SLOT '+i),E('output'),a,b);r.children[1].style.flex=1;
   a.onclick=async()=>{const x=await ask('PRESET LOAD '+i);if(x=='OK'){send('DUMP');alert('Preset '+i+' dipanggil')}else alert('Slot '+i+' kosong')};
   b.onclick=async()=>{if(confirm('Simpan ke slot '+i+'? (menimpa isi lama)')){const x=await ask('PRESET SAVE '+i);alert(x=='OK'?'Tersimpan':'Gagal')}};d.append(r)}
- const c=card(m,'SALIN KANAL');c.append(E('div','st','Salin semua setelan kanal sumber ke kanal tujuan. MUTE dan sumber input kanal tujuan tidak berubah.'));
- const g=E('div','sg');[['IN L → R','LR','Salin setelan IN L ke IN R?'],['OUT 1 → 2','12','Salin setelan OUT 1 ke OUT 2?'],['OUT 2 → 3','23','Salin setelan OUT 2 ke OUT 3?'],['OUT 3 → 4','34','Salin setelan OUT 3 ke OUT 4?'],['OUT 1 → SEMUA','1ALL','Salin setelan OUT 1 ke OUT 2, 3 dan 4 (termasuk crossover dan delay)?']].forEach(([n,k,q])=>{const b=E('button','btn',n);
-  b.onclick=async()=>{if(!on){alert('Belum terhubung');return}if(!confirm(q+' Setelan kanal tujuan akan ditimpa.'))return;const x=await ask('COPY '+k);if(x=='OK'){send('DUMP');alert('Disalin')}else alert('Gagal')};g.append(b)});c.append(g);
+ const c=card(m,'SALIN KANAL (MATRIKS)');c.append(E('div','st','Pilih kanal sumber (kiri) dan kanal tujuan (kanan). IN ke IN dan OUT ke OUT menyalin semua setelan. IN ke OUT (atau sebaliknya) hanya menyalin gain, fase, PEQ, limiter dan gate. MUTE dan sumber input kanal tujuan tidak berubah.'));
+ const CN=['IN L','IN R','OUT 1','OUT 2','OUT 3','OUT 4'],cr=E('div','sg'),sf=document.createElement('select'),stt=document.createElement('select');
+ [sf,stt].forEach(x=>{x.style.cssText='flex:1;min-width:96px;padding:9px;border-radius:8px;font:inherit;background:var(--bg,#111);color:inherit;border:1px solid #888'});
+ CN.forEach((n,i)=>{sf.add(new Option(n,i));stt.add(new Option(n,i))});stt.add(new Option('SEMUA OUT',6));sf.value=0;stt.value=1;
+ const ar=E('span','st','→');cr.append(sf,ar,stt);c.append(cr);
+ const cb=E('button','btn on','Salin');cb.onclick=async()=>{if(!on){alert('Belum terhubung');return}const f=+sf.value,t=+stt.value;if(f==t){alert('Sumber dan tujuan sama');return}if(!confirm('Salin setelan '+CN[f]+' ke '+(t==6?'semua OUT':CN[t])+'? Setelan kanal tujuan akan ditimpa.'))return;const x=await ask('COPY '+f+':'+t);if(x=='OK'){send('DUMP');alert('Disalin')}else alert('Gagal')};c.append(cb);
  const k=card(m,'KUNCI PANEL'),ks=E('div','st','');k.append(ks);const lk=()=>ks.innerHTML='Status: <b>'+(DV.lk==null?'-':+DV.lk?'TERKUNCI':'Terbuka')+'</b>';lk();
  const kg=E('div','sg');[['Kunci panel',1],['Buka kunci',0]].forEach(([n,v])=>{const b=E('button','btn',n);b.onclick=async()=>{if(!on){alert('Belum terhubung');return}const x=await ask('LOCK '+v);if(x=='OK'){DV.lk=v;lk()}else alert('Gagal')};kg.append(b)});k.append(kg);
  k.append(E('div','st','Saat terkunci, putar dan klik encoder diabaikan. Di alat: tahan tombol encoder 3 detik untuk membuka.'))}
@@ -439,11 +442,13 @@ async function lsend(){
 async function ldel(){if(!on){lgs('Belum terhubung ke alat.',0,1);return}
  const r=await ask('LOGO DEL '+LG.tgt);lgs(r=='OK'?'Logo bawaan dipakai lagi.':'Gagal: '+(LE[r]||r),0,r!='OK');if(r=='OK')send('INFO')}
 function grp(p,opts,key,cb){const g=E('div','sg');opts.forEach(([v,n])=>{const b=E('button','btn'+(LG[key]==v?' on':''),n);b.onclick=()=>{LG[key]=v;[...g.children].forEach(x=>x.classList.remove('on'));b.classList.add('on');cb&&cb()};g.append(b)});p.append(g)}
-function sys(m){let d=card(m,'KONEKSI');d.append(E('div','st','Bluetooth: <b>'+(on?dev.name:'-')+'</b>'));d.append(E('div','st','Versi web: <b>1.3.0</b>'));
+function sys(m){let d=card(m,'KONEKSI');d.append(E('div','st','Bluetooth: <b>'+(on?dev.name:'-')+'</b>'));d.append(E('div','st','Versi web: <b>1.4.0</b>'));
  const s=E('div','sg');let b=E('button','btn','Sinkron ulang ke alat');b.onclick=()=>on&&(send('DUMP'),send('INFO'));s.append(b);b=E('button','btn',on?'Putuskan':'Hubungkan');b.onclick=()=>on||busyC?dis():conn();s.append(b);d.append(s);
  d=card(m,'STANDBY LOGO');const sb=E('div','sg');STB.forEach(([v,n])=>{const b=E('button','btn'+(ST.sb==v?' on':''),n);b.onclick=()=>{ST.sb=v;send('STANDBY '+v);[...sb.children].forEach(x=>x.classList.remove('on'));b.classList.add('on')};sb.append(b)});
  d.append(sb,E('div','st','Layar alat menampilkan logo setelah tidak disentuh selama waktu ini.'));
  d=card(m,'TEMA LAYAR ALAT');const t=E('div','sg');TH.forEach((n,i)=>{const b=E('button','btn'+(ST.theme==i?' on':''),n);b.onclick=()=>{ST.theme=i;send('THEME '+i);[...t.children].forEach((x,j)=>x.classList.toggle('on',j==i))};t.append(b)});d.append(t);
+ d=card(m,'WARNA LAYAR ALAT');const tm=E('div','sg');[['Normal'],['Negatif'],['Tukar merah-biru'],['Negatif + tukar']].forEach(([n],i)=>{const b=E('button','btn'+(+DV.tm==i?' on':''),n);b.onclick=()=>{if(!on){alert('Belum terhubung');return}DV.tm=i;send('TFT '+i);[...tm.children].forEach((x,j)=>x.classList.toggle('on',j==i))};tm.append(b)});
+ d.append(tm,E('div','st','Kalau warna di layar alat tidak sesuai (misalnya hitam jadi biru atau oranye jadi biru), coba satu per satu. Layar langsung berubah dan pilihan tersimpan.'));
  d=card(m,'LOGO ALAT (160×128)');d.append(E('div','st','Untuk:'));grp(d,[['both','Boot + Standby'],['boot','Boot saja'],['standby','Standby saja']],'tgt');
  d.append(E('div','st','Ukuran:'));grp(d,[['cover','Penuh (dipotong)'],['stretch','Regang'],['contain','Utuh (bar hitam)']],'fit',lfit);
  const fi=E('input','inp');fi.type='file';fi.accept='image/*';fi.onchange=()=>{const f=fi.files[0];if(!f)return;const im=new Image();im.onload=()=>{LG.img=im;lfit()};im.src=URL.createObjectURL(f)};
