@@ -213,7 +213,7 @@ const $=s=>document.querySelector(s),E=(t,c,x)=>{const e=document.createElement(
 const FR=[16,20,25,31.5,40,50,63,80,100,125,160,200,250,315,400,500,630,800,1000,1250,1600,2000,2500,3150,4000,5000,6300,8000,10000,12500,16000,18000,20000];
 const BC=['#ff5050','#ff8c1e','#ffd228','#50dc6e','#28d2c8','#508cff','#9664ff','#d25af0','#ff64aa'];
 const TH=['GP TIGER','ICE LUXURY','UNGU - EMAS','MERAH - BIRU','MERAH - PUTIH','BIRU - KUNING'];
-const CN=['IN L','IN R','OUT 1','OUT 2','OUT 3','OUT 4'];
+const CN=['IN A','IN B','OUT 1','OUT 2','OUT 3','OUT 4'];
 const BW=[[.7071],[.5412,1.3066],[.5098,.6013,.8999,2.5629]],BE=[[.5773],[.5219,.8055],[.5060,.5612,.7109,1.2258]];
 const TABS=[['home','Home'],['in','Input'],['out','Output'],['xo','Crossover'],['peq','PEQ'],['lim','Limiter'],['gate','Noise Gate'],['dly','Delay'],['gen','Noise / Generator'],['pre','Presets'],['rta','RTA'],['sys','Setup']];
 const HERO='<span class="lgw" style="--lg:url('+LOGO_SRC+')"><img src="'+LOGO_SRC+'" alt="'+BRAND+'"></span>';
@@ -337,7 +337,7 @@ function home(m){const g=E('div','hg'),mx=E('div','c mix'),r=E('div','hr'),dc=E(
  const yi=[46,146],yo=[14,58,102,146],pk=n=>()=>{const k=K(n);for(let b=0;b<9;b++)if(+P[k+'p'+b+'.en'])return 1;return 0},
  L={peq:pk,lim:n=>()=>+P[K(n)+'lim.on'],gate:n=>()=>+P[K(n)+'gate.on'],dly:n=>()=>+P[K(n)+'dly']>0,xo:n=>()=>+P[K(n)+'hp.on']||+P[K(n)+'lp.on'],mute:n=>()=>+P[K(n)+'mute'],gain:n=>()=>+P[K(n)+'gain']!=0};
  let h='',w='';const bx=(x,y,wd,n,t,lb,pg,cl)=>'<g class="bx '+cl+(t=='mute'?' mu':'')+'" data-n="'+n+'" data-t="'+t+'" data-p="'+pg+'" transform="translate('+x+','+y+')"><rect width="'+wd+'" height="16" rx="3"/><text x="'+wd/2+'" y="11">'+lb+'</text></g>';
- [0,1].forEach(n=>{const y=yi[n];h+='<line x1="8" x2="216" y1="'+(y+8)+'" y2="'+(y+8)+'" stroke="#2f3946"/>';h+=bx(2,y,16,n,'x',n?'R':'L','in','')+[['mute','Mute','in'],['gain','GAIN','in'],['gate','GATE','gate'],['lim','LIM','lim'],['peq','PEQ','peq']].map((q,i)=>bx(24+i*38,y,34,n,q[0],q[1],q[2],'')).join('')});
+ [0,1].forEach(n=>{const y=yi[n];h+='<line x1="8" x2="216" y1="'+(y+8)+'" y2="'+(y+8)+'" stroke="#2f3946"/>';h+=bx(2,y,16,n,'x',n?'B':'A','in','')+[['mute','Mute','in'],['gain','GAIN','in'],['gate','GATE','gate'],['lim','LIM','lim'],['peq','PEQ','peq']].map((q,i)=>bx(24+i*38,y,34,n,q[0],q[1],q[2],'')).join('')});
  [2,3,4,5].forEach(n=>{const y=yo[n-2];h+='<line x1="262" x2="446" y1="'+(y+8)+'" y2="'+(y+8)+'" stroke="#2f3946"/>';h+=[['xo','XO','xo'],['dly','DLY','dly'],['peq','PEQ','peq'],['lim','LIM','lim'],['gain','GAN','out'],['mute','Mute','out']].map((q,i)=>bx(266+i*30,y,26,n,q[0],q[1],q[2],'o')).join('')+'<text x="458" y="'+(y+12)+'" fill="#8f9bab" font-size="9" text-anchor="middle">'+(n-1)+'</text>';
   [0,1].forEach(a=>{w+='<path id="w'+a+n+'" d="M216 '+(yi[a]+8)+'C240 '+(yi[a]+8)+' 240 '+(y+8)+' 262 '+(y+8)+'" fill="none" stroke="'+(a?'#b46bff':'#ff4fa0')+'" stroke-width="1.6"/>'})});
  dc.innerHTML='<svg viewBox="0 0 470 168" width="100%">'+h+w+'</svg>';
@@ -354,7 +354,7 @@ function home(m){const g=E('div','hg'),mx=E('div','c mix'),r=E('div','hr'),dc=E(
 function inp(m){for(let n=0;n<2;n++){const k=K(n),d=card(m,CN[n]);mt(d,n);sld(d,'GAIN',k+'gain',-12,12,.5,v=>v.toFixed(1)+' dB');const s=E('div','sg');tog(s,'MUTE',k+'mute','m');tog(s,'Ø FASE',k+'inv');
   const b=E('button','btn','Atur PEQ');b.onclick=()=>{c=n;go('peq')};s.append(b);
   const l1=E('button','btn','Limiter');l1.onclick=()=>{c=n;go('lim')};const g1=E('button','btn','Gate');g1.onclick=()=>{c=n;go('gate')};s.append(l1,g1);d.append(s)}}
-function out(m){chips(m,2);const k=K(c),d=card(m,CN[c]);mt(d,c);let s=E('div','sg');seg(s,k+'src',['IN L','IN R','L+R']);d.append(s);
+function out(m){chips(m,2);const k=K(c),d=card(m,CN[c]);mt(d,c);let s=E('div','sg');seg(s,k+'src',['IN A','IN B','A+B']);d.append(s);
  sld(d,'GAIN',k+'gain',-12,12,.5,v=>v.toFixed(1)+' dB');s=E('div','sg');tog(s,'MUTE',k+'mute','m');tog(s,'Ø FASE',k+'inv');d.append(s)}
 function xo(m){chips(m,2);const k=K(c),d=card(m,'CROSSOVER · '+CN[c]),cv=E('canvas');spec(d,cv);GR.push(()=>plot(cv,xoFn(k),-36,12,[],'#9be3ff'));
  [['hp','HPF'],['lp','LPF']].forEach(([x,n])=>{const kk=k+x+'.';let s=E('div','sg');s.append(E('b','',n+' '));tog(s,'ON',kk+'on');seg(s,kk+'type',['Linkw-R','Butter','Bessel']);d.append(s);
@@ -396,7 +396,7 @@ function pre(m){const d=card(m,'PRESETS');for(let i=1;i<=5;i++){const r=E('div',
   a.onclick=async()=>{const x=await ask('PRESET LOAD '+i);if(x=='OK'){send('DUMP');alert('Preset '+i+' dipanggil')}else alert('Slot '+i+' kosong')};
   b.onclick=async()=>{if(confirm('Simpan ke slot '+i+'? (menimpa isi lama)')){const x=await ask('PRESET SAVE '+i);alert(x=='OK'?'Tersimpan':'Gagal')}};d.append(r)}
  const c=card(m,'SALIN KANAL (MATRIKS)');c.append(E('div','st','Pilih kanal sumber (kiri) dan kanal tujuan (kanan). IN ke IN dan OUT ke OUT menyalin semua setelan. IN ke OUT (atau sebaliknya) hanya menyalin gain, fase, PEQ, limiter dan gate. MUTE dan sumber input kanal tujuan tidak berubah.'));
- const CN=['IN L','IN R','OUT 1','OUT 2','OUT 3','OUT 4'],cr=E('div','sg'),sf=document.createElement('select'),stt=document.createElement('select');
+ const CN=['IN A','IN B','OUT 1','OUT 2','OUT 3','OUT 4'],cr=E('div','sg'),sf=document.createElement('select'),stt=document.createElement('select');
  [sf,stt].forEach(x=>{x.style.cssText='flex:1;min-width:96px;padding:9px;border-radius:8px;font:inherit;background:var(--bg,#111);color:inherit;border:1px solid #888'});
  CN.forEach((n,i)=>{sf.add(new Option(n,i));stt.add(new Option(n,i))});stt.add(new Option('SEMUA OUT',6));sf.value=0;stt.value=1;
  const ar=E('span','st','→');cr.append(sf,ar,stt);c.append(cr);
@@ -405,7 +405,7 @@ function pre(m){const d=card(m,'PRESETS');for(let i=1;i<=5;i++){const r=E('div',
  const mlab=()=>mo.textContent=+mi.value<=-60?'MUTE':mi.value+' dB';mlab();let mt=0;
  mi.oninput=()=>{mlab();clearTimeout(mt);mt=setTimeout(()=>{if(on){DV.ms=+mi.value;send('MASTER '+mi.value)}},250)};
  mr.append(E('span','st','Master semua output  '),mi,mo);ml.append(mr);
- const lnb=E('div','sg');[['IN L/R',1],['OUT 1/2',2],['OUT 3/4',4]].forEach(([n,bit])=>{const b=E('button','btn'+(((+DV.ln||0)&bit)?' on':''),'Link '+n);
+ const lnb=E('div','sg');[['IN A/B',1],['OUT 1/2',2],['OUT 3/4',4]].forEach(([n,bit])=>{const b=E('button','btn'+(((+DV.ln||0)&bit)?' on':''),'Link '+n);
   b.onclick=()=>{if(!on){alert('Belum terhubung');return}DV.ln=((+DV.ln||0)^bit);const v=+DV.ln;send('LINK '+(v&1?1:0)+' '+(v&2?1:0)+' '+(v&4?1:0));b.classList.toggle('on',!!(v&bit))};lnb.append(b)});
  ml.append(lnb,E('div','st','Master menurunkan semua output sekaligus (0 sampai -60 dB). Link membuat gain dan mute pasangan kanal ikut bergerak bersama; selisih gain keduanya tetap.'));
  const k=card(m,'KUNCI PANEL'),ks=E('div','st','');k.append(ks);const lk=()=>ks.innerHTML='Status: <b>'+(DV.lk==null?'-':+DV.lk?'TERKUNCI':'Terbuka')+'</b>';lk();
