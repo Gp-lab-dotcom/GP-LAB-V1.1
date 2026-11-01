@@ -294,11 +294,14 @@ function sld(p,lb,k,mn,mx,st,fm){const r=E('div','sl'),i=E('input'),o=E('output'
  i.oninput=()=>{put(k,+i.value);o.textContent=fm(+i.value);f()};
  a.onclick=()=>{i.value=+i.value-st;i.oninput()};z.onclick=()=>{i.value=+i.value+st;i.oninput()};
  U.push(()=>{if(P[k]!=null){i.value=P[k];o.textContent=fm(+P[k]);f()}});p.append(r)}
+function pf(t){t=String(t).trim().toLowerCase().replace(',','.').replace(/\s/g,'');const m=t.match(/^([0-9]*\.?[0-9]+)(k|khz|hz)?$/);if(!m)return NaN;let v=parseFloat(m[1]);if(m[2]&&m[2][0]=='k')v*=1000;return v}
+function fed(o,get,set){o.style.cursor='text';o.title='Ketuk untuk mengetik frekuensi (mis. 2500 atau 2.5k)';o.onclick=()=>{const n=document.createElement('input');n.type='text';n.inputMode='decimal';n.value=String(get());n.style.cssText='width:84px;text-align:right;font:600 12px ui-monospace,Menlo,monospace;background:#000;color:#fff;border:1px solid var(--a);border-radius:3px;padding:3px 5px';let done=0;const end=ok=>{if(done)return;done=1;if(ok){const v=pf(n.value);if(!isNaN(v))set(Math.min(20000,Math.max(20,Math.round(v*10)/10)))}n.replaceWith(o)};n.onkeydown=e=>{if(e.key=='Enter'){e.preventDefault();end(1)}else if(e.key=='Escape')end(0)};n.onblur=()=>end(1);o.replaceWith(n);n.focus();n.select()}}
 function lsl(p,lb,k){const r=E('div','sl'),i=E('input'),o=E('output'),a=E('button','ar','‹'),z=E('button','ar','›'),h=E('div','sh'),q=E('div','sb');i.type='range';i.min=0;i.max=1000;h.append(E('label','',lb),o);q.append(a,i,z);r.append(h,q);
  const f=()=>i.style.setProperty('--v',i.value/10+'%');
  i.oninput=()=>{let f2=20*Math.pow(1000,i.value/1000);f2=f2>=100?Math.round(f2):Math.round(f2*10)/10;put(k,f2);o.textContent=fq(f2);f()};
  a.onclick=()=>{i.value=+i.value-6;i.oninput()};z.onclick=()=>{i.value=+i.value+6;i.oninput()};
- U.push(()=>{if(P[k]!=null){i.value=1000*Math.log(P[k]/20)/Math.log(1000);o.textContent=fq(+P[k]);f()}});p.append(r)}
+ U.push(()=>{if(P[k]!=null){i.value=1000*Math.log(P[k]/20)/Math.log(1000);o.textContent=fq(+P[k]);f()}});
+ fed(o,()=>P[k],v=>{put(k,v);i.value=1000*Math.log(v/20)/Math.log(1000);o.textContent=fq(v);f()});p.append(r)}
 function tog(p,lb,k,cl){const b=E('button','btn '+(cl||'tg'),lb);b.onclick=()=>{put(k,+P[k]?0:1);u1()};const u1=()=>b.classList.toggle('on',!!+P[k]);U.push(u1);p.append(b)}
 function seg(p,k,o){const bs=o.map((t,i)=>{const b=E('button','btn',t);b.onclick=()=>{put(k,i);u1()};p.append(b);return b});const u1=()=>bs.forEach((b,i)=>b.classList.toggle('on',i==+P[k]));U.push(u1)}
 function mt(p,i,lb){const d=E('div','mt',(lb?'<span class=l>'+lb+'</span>':'')+'<div><i></i></div><span></span>');p.append(d);const b=d.querySelector('i'),s=d.lastChild;
