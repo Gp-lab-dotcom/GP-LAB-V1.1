@@ -401,6 +401,13 @@ function pre(m){const d=card(m,'PRESETS');for(let i=1;i<=5;i++){const r=E('div',
  CN.forEach((n,i)=>{sf.add(new Option(n,i));stt.add(new Option(n,i))});stt.add(new Option('SEMUA OUT',6));sf.value=0;stt.value=1;
  const ar=E('span','st','→');cr.append(sf,ar,stt);c.append(cr);
  const cb=E('button','btn on','Salin');cb.onclick=async()=>{if(!on){alert('Belum terhubung');return}const f=+sf.value,t=+stt.value;if(f==t){alert('Sumber dan tujuan sama');return}if(!confirm('Salin setelan '+CN[f]+' ke '+(t==6?'semua OUT':CN[t])+'? Setelan kanal tujuan akan ditimpa.'))return;const x=await ask('COPY '+f+':'+t);if(x=='OK'){send('DUMP');alert('Disalin')}else alert('Gagal')};c.append(cb);
+ const ml=card(m,'MASTER & LINK STEREO');const mr=E('div','sl'),mi=E('input'),mo=E('output');mi.type='range';mi.min=-60;mi.max=0;mi.step=1;mi.value=DV.ms==null?0:Math.round(+DV.ms);
+ const mlab=()=>mo.textContent=+mi.value<=-60?'MUTE':mi.value+' dB';mlab();let mt=0;
+ mi.oninput=()=>{mlab();clearTimeout(mt);mt=setTimeout(()=>{if(on){DV.ms=+mi.value;send('MASTER '+mi.value)}},250)};
+ mr.append(E('span','st','Master semua output  '),mi,mo);ml.append(mr);
+ const lnb=E('div','sg');[['IN L/R',1],['OUT 1/2',2],['OUT 3/4',4]].forEach(([n,bit])=>{const b=E('button','btn'+(((+DV.ln||0)&bit)?' on':''),'Link '+n);
+  b.onclick=()=>{if(!on){alert('Belum terhubung');return}DV.ln=((+DV.ln||0)^bit);const v=+DV.ln;send('LINK '+(v&1?1:0)+' '+(v&2?1:0)+' '+(v&4?1:0));b.classList.toggle('on',!!(v&bit))};lnb.append(b)});
+ ml.append(lnb,E('div','st','Master menurunkan semua output sekaligus (0 sampai -60 dB). Link membuat gain dan mute pasangan kanal ikut bergerak bersama; selisih gain keduanya tetap.'));
  const k=card(m,'KUNCI PANEL'),ks=E('div','st','');k.append(ks);const lk=()=>ks.innerHTML='Status: <b>'+(DV.lk==null?'-':+DV.lk?'TERKUNCI':'Terbuka')+'</b>';lk();
  const kg=E('div','sg');[['Kunci panel',1],['Buka kunci',0]].forEach(([n,v])=>{const b=E('button','btn',n);b.onclick=async()=>{if(!on){alert('Belum terhubung');return}const x=await ask('LOCK '+v);if(x=='OK'){DV.lk=v;lk()}else alert('Gagal')};kg.append(b)});k.append(kg);
  k.append(E('div','st','Saat terkunci, putar dan klik encoder diabaikan. Di alat: tahan tombol encoder 3 detik untuk membuka.'))}
@@ -442,7 +449,7 @@ async function lsend(){
 async function ldel(){if(!on){lgs('Belum terhubung ke alat.',0,1);return}
  const r=await ask('LOGO DEL '+LG.tgt);lgs(r=='OK'?'Logo bawaan dipakai lagi.':'Gagal: '+(LE[r]||r),0,r!='OK');if(r=='OK')send('INFO')}
 function grp(p,opts,key,cb){const g=E('div','sg');opts.forEach(([v,n])=>{const b=E('button','btn'+(LG[key]==v?' on':''),n);b.onclick=()=>{LG[key]=v;[...g.children].forEach(x=>x.classList.remove('on'));b.classList.add('on');cb&&cb()};g.append(b)});p.append(g)}
-function sys(m){let d=card(m,'KONEKSI');d.append(E('div','st','Bluetooth: <b>'+(on?dev.name:'-')+'</b>'));d.append(E('div','st','Versi web: <b>1.4.0</b>'));
+function sys(m){let d=card(m,'KONEKSI');d.append(E('div','st','Bluetooth: <b>'+(on?dev.name:'-')+'</b>'));d.append(E('div','st','Versi web: <b>1.5.0</b>'));
  const s=E('div','sg');let b=E('button','btn','Sinkron ulang ke alat');b.onclick=()=>on&&(send('DUMP'),send('INFO'));s.append(b);b=E('button','btn',on?'Putuskan':'Hubungkan');b.onclick=()=>on||busyC?dis():conn();s.append(b);d.append(s);
  d=card(m,'STANDBY LOGO');const sb=E('div','sg');STB.forEach(([v,n])=>{const b=E('button','btn'+(ST.sb==v?' on':''),n);b.onclick=()=>{ST.sb=v;send('STANDBY '+v);[...sb.children].forEach(x=>x.classList.remove('on'));b.classList.add('on')};sb.append(b)});
  d.append(sb,E('div','st','Layar alat menampilkan logo setelah tidak disentuh selama waktu ini.'));
@@ -458,7 +465,7 @@ function sys(m){let d=card(m,'KONEKSI');d.append(E('div','st','Bluetooth: <b>'+(
  nm.placeholder='Nama Bluetooth baru (maks 19 huruf)';pn.placeholder='PIN baru';nm.maxLength=19;pn.maxLength=7;d.append(nm,pn);
  b=E('button','btn','Simpan');b.onclick=()=>{if(nm.value)send('NAME '+nm.value);if(pn.value){send('PIN '+pn.value);localStorage.gpPin=pn.value}alert('Terkirim. Restart alat agar nama baru aktif.')};d.append(b);
  d=card(m,'ALAT');const kv=(k,v)=>d.append(E('div','kv','<span>'+k+'</span><b>'+v+'</b>'));
- kv('Firmware',DV.fw||'-');kv('Nama Bluetooth',DV.name||(on?dev.name:'-'));kv('Logo boot',DV.lb==null?'-':+DV.lb?'Custom':'Bawaan');kv('Logo standby',DV.ls==null?'-':+DV.ls?'Custom':'Bawaan');kv('Flash kosong',DV.fs==null?'-':DV.fs+' KB');
+ kv('Firmware',DV.fw||'-');kv('Suhu chip',DV.tp==null?'-':DV.tp+' °C'+(+DV.tw?' (PANAS)':''));kv('Nama Bluetooth',DV.name||(on?dev.name:'-'));kv('Logo boot',DV.lb==null?'-':+DV.lb?'Custom':'Bawaan');kv('Logo standby',DV.ls==null?'-':+DV.ls?'Custom':'Bawaan');kv('Flash kosong',DV.fs==null?'-':DV.fs+' KB');
  const rs=E('button','btn','Restart alat');let ra=0;rs.style.marginTop='10px';
  rs.onclick=()=>{if(!on)return;if(ra&&Date.now()-ra<3000){ra=0;send('RESTART');rs.textContent='Restart…';rs.classList.remove('on')}else{ra=Date.now();rs.textContent='Yakin restart?';rs.classList.add('on');setTimeout(()=>{if(ra){ra=0;rs.textContent='Restart alat';rs.classList.remove('on')}},3000)}};d.append(rs)}
 const V={home,in:inp,out,xo,peq,lim,gate:gt,dly,gen,pre,rta,sys};
