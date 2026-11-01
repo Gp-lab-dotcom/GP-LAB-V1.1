@@ -220,6 +220,7 @@ const HERO='<span class="lgw" style="--lg:url('+LOGO_SRC+')"><img src="'+LOGO_SR
 const LOGO=LOGO_SRC?`<img src="${LOGO_SRC}" alt="${BRAND}">`:`<svg viewBox="0 0 64 64"><rect x="2" y="2" width="60" height="60" rx="14" fill="#121418" stroke="#ff2a2a" stroke-width="3"/><text x="32" y="38" text-anchor="middle" font-family="system-ui" font-weight="800" font-style="italic" font-size="24" fill="#ff2a2a">FE</text><path d="M10 50h8l4-8 6 14 6-20 5 14h15" fill="none" stroke="#e6edf7" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/></svg>`;
 let D=[],dev,rx,tx,P={},U=[],PF=[],GR=[],tab='home',c=2,bd=0,M=[-90,-90,-90,-90,-90,-90],R=[],on=0,buf='',cmds=[],pend={},pumping=0,rw=null,ST={theme:-1,sb:30},xfer=0,DV={};
 const K=n=>n<2?'i'+n+'.':'o'+(n-1)+'.',upd=()=>U.forEach(f=>f()),gr=()=>GR.forEach(f=>f());
+const pfx=p=>+P[p+'fx']||FR[+P[p+'fi']];
 const fq=f=>f>=1000?(f/1000).toFixed(2)+' kHz':f.toFixed(f<100?1:0)+' Hz';
 const sl=ms=>new Promise(r=>setTimeout(r,ms));
 // ---------- BLE ----------
@@ -236,7 +237,9 @@ async function pump(){if(pumping||!rx||xfer)return;pumping=1;
  pumping=0}
 const send=s=>{cmds.push(s);pump()};
 const put=(k,v)=>{P[k]=v;pend[k]=v;pump();gr()};
+let NM=[];
 function onN(e){const s=new TextDecoder().decode(e.target.value);
+ if(s.startsWith('PN:')){NM=s.slice(3).split('|').map(q=>({f:q[0]=='1',n:q.slice(1)}));upd();return}
  if(s.startsWith('INFO ')){const i=s.indexOf('|name='),h=i<0?s.slice(5):s.slice(5,i);DV={};h.split('|').forEach(q=>{const j=q.indexOf('=');if(j>0)DV[q.slice(0,j)]=q.slice(j+1)});DV.name=i<0?'':s.slice(i+6);
   if(DV.theme!=null)ST.theme=+DV.theme;if(DV.sb!=null)ST.sb=+DV.sb;if(tab=='sys'&&!xfer)go();return}
  if(s[0]=='G'&&s[1]==':'){D=s.slice(2).split(',').map(Number);lastG=Date.now();PF.forEach(f=>f());return}
@@ -263,7 +266,7 @@ async function link(){let srv,sv;
  step='login PIN';say('Login PIN…');const pin=pinVal();let r=await ask('AUTH '+pin);if(r=='TIMEOUT')r=await ask('AUTH '+pin,4000);
  if(r=='TIMEOUT')throw new Error('alat tidak membalas AUTH (notifikasi tidak sampai)');
  if(r!='OK'){on=0;dis();say('PIN salah ('+r+'). Isi PIN yang benar lalu tekan Hubungkan lagi.',1);return false}
- localStorage.gpPin=pin;$('#dot').classList.add('on');send('DUMP');send('INFO');send('METER 1');if(tab=='rta'||tab=='peq'||tab=='xo')send('RTA 1');if(tab=='lim'||tab=='gate')send('DYN 1');say('');return true}
+ localStorage.gpPin=pin;$('#dot').classList.add('on');send('DUMP');send('INFO');send('PRESET NAMES');send('METER 1');if(tab=='rta'||tab=='peq'||tab=='xo')send('RTA 1');if(tab=='lim'||tab=='gate')send('DYN 1');say('');return true}
 async function conn(){if(busyC)return;busyC=1;userDis=0;MSG='';
  try{step='memilih perangkat';say('Memilih perangkat…');
   const d=await navigator.bluetooth.requestDevice({filters:[{services:[SVC]},{namePrefix:'GP'}],optionalServices:[SVC]});
@@ -295,13 +298,13 @@ function sld(p,lb,k,mn,mx,st,fm){const r=E('div','sl'),i=E('input'),o=E('output'
  a.onclick=()=>{i.value=+i.value-st;i.oninput()};z.onclick=()=>{i.value=+i.value+st;i.oninput()};
  U.push(()=>{if(P[k]!=null){i.value=P[k];o.textContent=fm(+P[k]);f()}});p.append(r)}
 function pf(t){t=String(t).trim().toLowerCase().replace(',','.').replace(/\s/g,'');const m=t.match(/^([0-9]*\.?[0-9]+)(k|khz|hz)?$/);if(!m)return NaN;let v=parseFloat(m[1]);if(m[2]&&m[2][0]=='k')v*=1000;return v}
-function fed(o,get,set){o.style.cursor='text';o.title='Ketuk untuk mengetik frekuensi (mis. 2500 atau 2.5k)';o.onclick=()=>{const n=document.createElement('input');n.type='text';n.inputMode='decimal';n.value=String(get());n.style.cssText='width:84px;text-align:right;font:600 12px ui-monospace,Menlo,monospace;background:#000;color:#fff;border:1px solid var(--a);border-radius:3px;padding:3px 5px';let done=0;const end=ok=>{if(done)return;done=1;if(ok){const v=pf(n.value);if(!isNaN(v))set(Math.min(20000,Math.max(20,Math.round(v*10)/10)))}n.replaceWith(o)};n.onkeydown=e=>{if(e.key=='Enter'){e.preventDefault();end(1)}else if(e.key=='Escape')end(0)};n.onblur=()=>end(1);o.replaceWith(n);n.focus();n.select()}}
-function lsl(p,lb,k){const r=E('div','sl'),i=E('input'),o=E('output'),a=E('button','ar','‹'),z=E('button','ar','›'),h=E('div','sh'),q=E('div','sb');i.type='range';i.min=0;i.max=1000;h.append(E('label','',lb),o);q.append(a,i,z);r.append(h,q);
+function fed(o,get,set,lo,rd){lo=lo||20;rd=rd||(x=>Math.round(x*10)/10);o.style.cursor='text';o.title='Ketuk untuk mengetik frekuensi (mis. 2500 atau 2.5k)';o.onclick=()=>{const n=document.createElement('input');n.type='text';n.inputMode='decimal';n.value=String(get());n.style.cssText='width:84px;text-align:right;font:600 12px ui-monospace,Menlo,monospace;background:#000;color:#fff;border:1px solid var(--a);border-radius:3px;padding:3px 5px';let done=0;const end=ok=>{if(done)return;done=1;if(ok){const v=pf(n.value);if(!isNaN(v))set(Math.min(20000,Math.max(lo,rd(v))))}n.replaceWith(o)};n.onkeydown=e=>{if(e.key=='Enter'){e.preventDefault();end(1)}else if(e.key=='Escape')end(0)};n.onblur=()=>end(1);o.replaceWith(n);n.focus();n.select()}}
+function lsl(p,lb,k,lo,hf){lo=lo||20;const LR=Math.log(20000/lo),rd=f=>f>=100?Math.round(f):hf?Math.round(f*2)/2:Math.round(f*10)/10;const r=E('div','sl'),i=E('input'),o=E('output'),a=E('button','ar','‹'),z=E('button','ar','›'),h=E('div','sh'),q=E('div','sb');i.type='range';i.min=0;i.max=1000;h.append(E('label','',lb),o);q.append(a,i,z);r.append(h,q);
  const f=()=>i.style.setProperty('--v',i.value/10+'%');
- i.oninput=()=>{let f2=20*Math.pow(1000,i.value/1000);f2=f2>=100?Math.round(f2):Math.round(f2*10)/10;put(k,f2);o.textContent=fq(f2);f()};
+ i.oninput=()=>{let f2=rd(lo*Math.exp(LR*i.value/1000));put(k,f2);o.textContent=fq(f2);f()};
  a.onclick=()=>{i.value=+i.value-6;i.oninput()};z.onclick=()=>{i.value=+i.value+6;i.oninput()};
- U.push(()=>{if(P[k]!=null){i.value=1000*Math.log(P[k]/20)/Math.log(1000);o.textContent=fq(+P[k]);f()}});
- fed(o,()=>P[k],v=>{put(k,v);i.value=1000*Math.log(v/20)/Math.log(1000);o.textContent=fq(v);f()});p.append(r)}
+ U.push(()=>{if(P[k]!=null){i.value=1000*Math.log(P[k]/lo)/LR;o.textContent=fq(+P[k]);f()}});
+ fed(o,()=>P[k],v=>{put(k,v);i.value=1000*Math.log(v/lo)/LR;o.textContent=fq(v);f()},lo,hf?rd:null);p.append(r)}
 function tog(p,lb,k,cl){const b=E('button','btn '+(cl||'tg'),lb);b.onclick=()=>{put(k,+P[k]?0:1);u1()};const u1=()=>b.classList.toggle('on',!!+P[k]);U.push(u1);p.append(b)}
 function seg(p,k,o){const bs=o.map((t,i)=>{const b=E('button','btn',t);b.onclick=()=>{put(k,i);u1()};p.append(b);return b});const u1=()=>bs.forEach((b,i)=>b.classList.toggle('on',i==+P[k]));U.push(u1)}
 function mt(p,i,lb){const d=E('div','mt',(lb?'<span class=l>'+lb+'</span>':'')+'<div><i></i></div><span></span>');p.append(d);const b=d.querySelector('i'),s=d.lastChild;
@@ -317,8 +320,8 @@ function mag(q,f){const w=2*Math.PI*f/48000,c1=Math.cos(w),s1=Math.sin(w),c2=Mat
 function xoQ(k,x){const o=+P[k+x+'.on'],ty=P[k+x+'.type'],s=P[k+x+'.slope'],f=P[k+x+'.f'],t=x=='lp'?0:1;if(!o)return[];
  if(ty==0){if(s==0)return[bq(t,f,.5,0)];const q=BW[s==1?0:1];return q.concat(q).map(z=>bq(t,f,z,0))}return(ty==1?BW:BE)[s].map(z=>bq(t,f,z,0))}
 const xoFn=k=>{const s=xoQ(k,'hp').concat(xoQ(k,'lp'));return f=>s.reduce((m,q)=>m*mag(q,f),1)};
-function peqFn(k){const s=[];for(let b=0;b<9;b++){const p=k+'p'+b+'.',q=+P[p+'q'],g=+P[p+'g'],f=FR[+P[p+'fi']];if(+P[p+'en']&&Math.abs(g)>=.05&&f)s.push(bq(2,f,q>0?q:1,g))}return f=>s.reduce((m,q)=>m*mag(q,f),1)}
-const peqPts=k=>{const a=[];for(let b=0;b<9;b++){const p=k+'p'+b+'.';if(+P[p+'en'])a.push({f:FR[P[p+'fi']],g:P[p+'g'],c:BC[b],s:b==bd,n:b+1})}return a};
+function peqFn(k){const s=[];for(let b=0;b<9;b++){const p=k+'p'+b+'.',q=+P[p+'q'],g=+P[p+'g'],f=pfx(p);if(+P[p+'en']&&Math.abs(g)>=.05&&f)s.push(bq(2,f,q>0?q:1,g))}return f=>s.reduce((m,q)=>m*mag(q,f),1)}
+const peqPts=k=>{const a=[];for(let b=0;b<9;b++){const p=k+'p'+b+'.';if(+P[p+'en'])a.push({f:pfx(p),g:P[p+'g'],c:BC[b],s:b==bd,n:b+1})}return a};
 function plot(cv,fn,lo,hi,pts,col){const x=cv.getContext('2d'),W=cv.width=cv.clientWidth*2,H=cv.height=cv.clientHeight*2;
  const X=f=>Math.log(f/20)/Math.log(1000)*(W-1),Y=d=>{d=isFinite(d)?d:0;return(hi-Math.min(hi,Math.max(lo,d)))/(hi-lo)*(H-44)+16};
  x.font='20px sans-serif';x.lineWidth=1;x.strokeStyle='#3b4147';x.fillStyle='#9aa3ad';
@@ -371,10 +374,10 @@ function spDraw(sc){const x=sc.getContext('2d'),w=sc.clientWidth*2,h=sc.clientHe
  x.fillStyle='rgba(255,255,255,.7)';for(let i=0;i<16;i++)x.fillRect(xs[i]-6,B-pk[i]*(B-14)-1,12,2);
  const st=!on?'Belum terhubung':(!lastR||Date.now()-lastR>2500)?'RTA: menunggu data dari alat...':RN<16?'RTA terpotong ('+RN+'/16 pita) - MTU BLE kecil':'';if(st){x.font='bold 22px sans-serif';x.textAlign='left';x.fillStyle='rgba(255,196,40,.9)';x.fillText(st,12,30)}}
 function peq(m){chips(m,0);const k=K(c),d=card(m,'PEQ 9 BAND · '+CN[c]),cv=E('canvas');spec(d,cv);GR.push(()=>plot(cv,peqFn(k),-15,15,peqPts(k),'#9be3ff'));cv.style.touchAction='none';
- const mv=e=>{if(e.type=='pointermove'&&!e.buttons)return;const r=cv.getBoundingClientRect(),px=(e.clientX-r.left)/r.width,py=(e.clientY-r.top)/r.height,f=20*Math.pow(1000,Math.min(1,Math.max(0,px)));let fi=0,bs=1e9;FR.forEach((v,i)=>{const z=Math.abs(Math.log(v/f));if(z<bs){bs=z;fi=i}});const kk=k+'p'+bd+'.';put(kk+'en',1);put(kk+'fi',fi);put(kk+'g',Math.round(Math.min(15,Math.max(-15,15-py*30*.95))*2)/2);upd()};cv.onpointerdown=mv;cv.onpointermove=mv;d.append(E('div','st','Sentuh atau geser grafik untuk memindahkan band terpilih.'));
+ const mv=e=>{if(e.type=='pointermove'&&!e.buttons)return;const r=cv.getBoundingClientRect(),px=(e.clientX-r.left)/r.width,py=(e.clientY-r.top)/r.height,f=20*Math.pow(1000,Math.min(1,Math.max(0,px)));const kk=k+'p'+bd+'.';put(kk+'en',1);put(kk+'fx',f>=100?Math.round(f):Math.round(f*2)/2);put(kk+'g',Math.round(Math.min(15,Math.max(-15,15-py*30*.95))*2)/2);upd()};cv.onpointerdown=mv;cv.onpointermove=mv;d.append(E('div','st','Sentuh atau geser grafik untuk memindahkan band terpilih.'));
  let s=E('div','sg');for(let i=0;i<9;i++){const b=E('button','btn'+(i==bd?' on':''),i+1);b.style.borderColor=BC[i];b.onclick=()=>{bd=i;go()};s.append(b)}d.append(s);
  const kb=k+'p'+bd+'.';s=E('div','sg');tog(s,'AKTIF',kb+'en');d.append(s);
- sld(d,'FREQ',kb+'fi',0,32,1,v=>fq(FR[v]));sld(d,'GAIN',kb+'g',-15,15,.5,v=>v.toFixed(1)+' dB');sld(d,'Q',kb+'q',.4,12,.1,v=>v.toFixed(1))}
+ lsl(d,'FREQ',kb+'fx',16,1);sld(d,'GAIN',kb+'g',-15,15,.5,v=>v.toFixed(1)+' dB');sld(d,'Q',kb+'q',.4,12,.1,v=>v.toFixed(1))}
 function dynPlot(cv,g,kk,o,L){const x=cv.getContext('2d'),W=cv.width=cv.clientWidth*2,H=cv.height=cv.clientHeight*2,lo=g?-90:-60,on=+P[kk+'on'],thr=+P[kk+'thr'],rt=g?1:+P[kk+'rat'],col=on?(g?'#ffc428':'#ff4655'):'#3a4458';
  const X=d=>(Math.min(0,Math.max(lo,d))-lo)/-lo*(W-1),Y=d=>(1-(Math.min(0,Math.max(lo,d))-lo)/-lo)*(H-6)+3;
  x.strokeStyle='#3b4147';x.lineWidth=1;for(let i=1;i<4;i++){x.beginPath();x.moveTo(W*i/4,0);x.lineTo(W*i/4,H);x.moveTo(0,H*i/4);x.lineTo(W,H*i/4);x.stroke()}
@@ -395,9 +398,20 @@ function dyn(m,Q){chips(m,0);const k=K(c),o=c<2?4+c:c-2;[Q].forEach(([n,q])=>{co
 const lim=m=>dyn(m,['LIMITER','lim.']),gt=m=>dyn(m,['NOISE GATE','gate.']);
 function dly(m){chips(m,2);const k=K(c),d=card(m,'DELAY · '+CN[c]);sld(d,'DELAY',k+'dly',0,300,.1,v=>v.toFixed(1)+' ms');const w=E('div','w');d.append(w);U.push(()=>w.textContent='Jarak setara '+((P[k+'dly']||0)*34.3).toFixed(1)+' cm')}
 function gen(m){const d=card(m,'NOISE / GENERATOR');d.append(E('div','w','Kecilkan volume amplifier dulu! Otomatis mati setelah 30 detik.'));const s=E('div','sg');seg(s,'gen',['OFF','WHITE','PINK']);d.append(s);sld(d,'LEVEL','genl',-60,0,1,v=>v+' dB')}
-function pre(m){const d=card(m,'PRESETS');for(let i=1;i<=5;i++){const r=E('div','r'),a=E('button','btn','Load'),b=E('button','btn','Save');r.append(E('label','','SLOT '+i),E('output'),a,b);r.children[1].style.flex=1;
+function askName(t,v){return new Promise(res=>{const o=E('div'),b=E('div'),h=E('div'),i=E('input'),s=E('div','sg'),ok=E('button','btn on','Simpan'),no=E('button','btn','Batal');
+ o.style.cssText='position:fixed;inset:0;background:#000c;z-index:99;display:flex;align-items:center;justify-content:center;padding:20px';
+ b.style.cssText='width:100%;max-width:340px;background:#17191e;border:1px solid #2c3038;border-radius:8px;padding:14px';
+ h.style.cssText='color:#8a94a6;font:700 11px sans-serif;letter-spacing:.8px';h.textContent=t;
+ i.value=v||'';i.maxLength=12;i.placeholder='kosong = hapus nama';i.style.cssText='width:100%;margin:12px 0;padding:10px;font:600 16px ui-monospace,Menlo,monospace;background:#000;color:#fff;border:1px solid var(--a);border-radius:4px;box-sizing:border-box';
+ i.oninput=()=>{i.value=i.value.replace(/[^A-Za-z0-9 \-_.]/g,'')};
+ const x=r=>{o.remove();res(r)};ok.onclick=()=>x(i.value);no.onclick=()=>x(null);i.onkeydown=e=>{if(e.key=='Enter')x(i.value);else if(e.key=='Escape')x(null)};
+ s.append(ok,no);b.append(h,i,s);o.append(b);document.body.append(o);i.focus();i.select()})}
+function pre(m){const d=card(m,'PRESETS');for(let i=1;i<=5;i++){const r=E('div','r'),a=E('button','btn','Load'),b=E('button','btn','Save'),nb=E('button','btn','Nama'),o=E('output');r.append(E('label','','SLOT '+i),o,a,b,nb);o.style.cssText='flex:1;min-width:0;text-align:left;overflow:hidden;text-overflow:ellipsis;white-space:nowrap';
+  U.push(()=>{const q=NM[i-1]||{};o.textContent=q.n||(q.f?'TERISI':'KOSONG');o.style.color=q.f?'var(--g)':''});
+  nb.onclick=async()=>{if(!on){alert('Belum terhubung');return}const v=await askName('NAMA SLOT '+i+' (maks 12 karakter)',(NM[i-1]||{}).n||'');if(v===null)return;const x=await ask('PRESET NAME '+i+' '+v.slice(0,12));if(x=='OK'){send('PRESET NAMES')}else alert('Gagal')};
   a.onclick=async()=>{const x=await ask('PRESET LOAD '+i);if(x=='OK'){send('DUMP');alert('Preset '+i+' dipanggil')}else alert('Slot '+i+' kosong')};
-  b.onclick=async()=>{if(confirm('Simpan ke slot '+i+'? (menimpa isi lama)')){const x=await ask('PRESET SAVE '+i);alert(x=='OK'?'Tersimpan':'Gagal')}};d.append(r)}
+  b.onclick=async()=>{if(confirm('Simpan ke slot '+i+'? (menimpa isi lama)')){const x=await ask('PRESET SAVE '+i);if(x=='OK')send('PRESET NAMES');alert(x=='OK'?'Tersimpan':'Gagal')}};d.append(r)}
+ upd();
  const c=card(m,'SALIN KANAL (MATRIKS)');c.append(E('div','st','Pilih kanal sumber (kiri) dan kanal tujuan (kanan). IN ke IN dan OUT ke OUT menyalin semua setelan. IN ke OUT (atau sebaliknya) hanya menyalin gain, fase, PEQ, limiter dan gate. MUTE dan sumber input kanal tujuan tidak berubah.'));
  const CN=['IN A','IN B','OUT 1','OUT 2','OUT 3','OUT 4'],cr=E('div','sg'),sf=document.createElement('select'),stt=document.createElement('select');
  [sf,stt].forEach(x=>{x.style.cssText='flex:1;min-width:96px;padding:9px;border-radius:8px;font:inherit;background:var(--bg,#111);color:inherit;border:1px solid #888'});
@@ -453,7 +467,7 @@ async function ldel(){if(!on){lgs('Belum terhubung ke alat.',0,1);return}
  const r=await ask('LOGO DEL '+LG.tgt);lgs(r=='OK'?'Logo bawaan dipakai lagi.':'Gagal: '+(LE[r]||r),0,r!='OK');if(r=='OK')send('INFO')}
 function grp(p,opts,key,cb){const g=E('div','sg');opts.forEach(([v,n])=>{const b=E('button','btn'+(LG[key]==v?' on':''),n);b.onclick=()=>{LG[key]=v;[...g.children].forEach(x=>x.classList.remove('on'));b.classList.add('on');cb&&cb()};g.append(b)});p.append(g)}
 function sys(m){let d=card(m,'KONEKSI');d.append(E('div','st','Bluetooth: <b>'+(on?dev.name:'-')+'</b>'));d.append(E('div','st','Versi web: <b>1.5.0</b>'));
- const s=E('div','sg');let b=E('button','btn','Sinkron ulang ke alat');b.onclick=()=>on&&(send('DUMP'),send('INFO'));s.append(b);b=E('button','btn',on?'Putuskan':'Hubungkan');b.onclick=()=>on||busyC?dis():conn();s.append(b);d.append(s);
+ const s=E('div','sg');let b=E('button','btn','Sinkron ulang ke alat');b.onclick=()=>on&&(send('DUMP'),send('INFO'),send('PRESET NAMES'));s.append(b);b=E('button','btn',on?'Putuskan':'Hubungkan');b.onclick=()=>on||busyC?dis():conn();s.append(b);d.append(s);
  d=card(m,'STANDBY LOGO');const sb=E('div','sg');STB.forEach(([v,n])=>{const b=E('button','btn'+(ST.sb==v?' on':''),n);b.onclick=()=>{ST.sb=v;send('STANDBY '+v);[...sb.children].forEach(x=>x.classList.remove('on'));b.classList.add('on')};sb.append(b)});
  d.append(sb,E('div','st','Layar alat menampilkan logo setelah tidak disentuh selama waktu ini.'));
  d=card(m,'TEMA LAYAR ALAT');const t=E('div','sg');TH.forEach((n,i)=>{const b=E('button','btn'+(ST.theme==i?' on':''),n);b.onclick=()=>{ST.theme=i;send('THEME '+i);[...t.children].forEach((x,j)=>x.classList.toggle('on',j==i))};t.append(b)});d.append(t);
