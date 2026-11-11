@@ -682,7 +682,7 @@ const V={home,in:inp,out:W(out),xo:W(xo),peq:W(peq),lim:W(lim),gate:W(gt),dly:W(
 function go(t){if(t){if(t!=tab&&on){send(t=='rta'||t=='peq'||t=='xo'?'RTA 1':'RTA 0');send(t=='lim'||t=='gate'?'DYN 1':'DYN 0');send('METER 1')}tab=t;if(['xo','dly','out'].includes(t)&&c<2)c=2;scrollTo(0,0)}
  U=[];PF=[];GR=[];MA=[];const m=$('#v');m.innerHTML='';m.dataset.t=tab;m.style.setProperty('--cc',['home','pre','sys','rta','gen'].includes(tab)?ACC:CC[c]);V[tab](m);navUpd();upd();gr();PF.forEach(f=>f())}
 $('#lg').innerHTML=LOGO;$('#nm').textContent=BRAND;document.title=BRAND+' DLMS';
-$('#hb').innerHTML='<button class="hbt" id="hc">CONNECT</button><button class="hbt" id="hs">SIMPAN<span class="lw"> SETTINGAN</span></button>';$('#hc').onclick=()=>{if(busyC)return;on?dis():conn()};$('#hs').onclick=()=>go('pre');[['home','home'],['pre','pre'],['sys','sys']].forEach(([k,i])=>{const b=E('button','ib',ic(i));b.onclick=()=>go(k);$('#hb').append(b)});
+$('#hb').innerHTML='<button class="hbt" id="hc">CONNECT</button><button class="hbt" id="hs">SIMPAN<span class="lw"> SETTINGAN</span></button>'+'<a class="wa" href="https://wa.me/6282337174600?text=Halo%2C%20saya%20mau%20lapor%20bug%20%2F%20maintenance%20GP%20LAB%20DLMS" target="_blank" rel="noopener" title="Lapor bug / maintenance via WhatsApp 0823-3717-4600" aria-label="Lapor bug atau maintenance via WhatsApp"><svg viewBox="0 0 24 24" aria-hidden="true"><path fill="currentColor" d="M12.04 2C6.58 2 2.13 6.45 2.13 11.91c0 1.75.46 3.45 1.32 4.95L2.05 22l5.25-1.38a9.9 9.9 0 004.74 1.21c5.46 0 9.91-4.45 9.91-9.91S17.5 2 12.04 2zm0 18.15c-1.48 0-2.93-.4-4.2-1.15l-.3-.18-3.12.82.83-3.04-.2-.31a8.2 8.2 0 01-1.26-4.38c0-4.54 3.7-8.24 8.25-8.24s8.24 3.7 8.24 8.24-3.7 8.24-8.24 8.24zm4.52-6.16c-.25-.12-1.47-.72-1.69-.81-.23-.08-.39-.12-.56.12-.17.25-.64.81-.78.97-.14.17-.29.19-.54.06-.25-.12-1.05-.39-2-1.23-.74-.66-1.23-1.47-1.38-1.72-.14-.25-.02-.38.11-.51.11-.11.25-.29.37-.43.12-.14.17-.25.25-.41.08-.17.04-.31-.02-.43-.06-.12-.56-1.34-.76-1.84-.2-.48-.4-.42-.56-.43h-.48c-.17 0-.43.06-.66.31-.23.25-.87.85-.87 2.07s.89 2.4 1.01 2.56c.12.17 1.75 2.67 4.23 3.74.59.26 1.05.41 1.41.52.59.19 1.13.16 1.56.1.48-.07 1.47-.6 1.67-1.18.21-.58.21-1.07.14-1.18-.06-.1-.23-.16-.48-.29z"/></svg><span class="wal"><b>LAPOR BUG / MAINTENANCE</b><i>WA 0823-3717-4600</i></span></a>';$('#hc').onclick=()=>{if(busyC)return;on?dis():conn()};$('#hs').onclick=()=>go('pre');[['home','home'],['pre','pre'],['sys','sys']].forEach(([k,i])=>{const b=E('button','ib',ic(i));b.onclick=()=>go(k);$('#hb').append(b)});
 var _mt=0;requestAnimationFrame(function ml(t){const dt=_mt?Math.min(80,t-_mt):16.7;_mt=t;for(let i=0;i<MA.length;i++)MA[i](dt);requestAnimationFrame(ml)});
 for(let i=0;i<6;i++)$('#hm').append(E('i','','<b></b>'));setInterval(()=>[...$('#hm').children].forEach((e,i)=>e.firstChild.style.height=Math.min(100,Math.max(0,(M[i]+60)/60*100))+'%'),100);
 const GRP=[['MIXER',['home']],['KANAL',['in','out','xo','peq','dly']],['SINYAL',['lim','gate','gen','rta']],['SISTEM',['pre','sys']]],TN=Object.fromEntries(TABS),bn=E('footer');bn.id='bn';document.body.append(bn);
@@ -875,6 +875,34 @@ footer#bn button::before{top:50%;left:9px;width:5px;height:5px;margin:-2.5px 0 0
 footer#bn button.on{transform:translateY(2px)}
 .hg{height:calc(100vh - 112px);height:calc(100dvh - 112px)}
 main{padding-bottom:calc(52px + env(safe-area-inset-bottom))}}
+
+/* landscape: ikon rumah / menu / pengaturan tampil lagi di kanan header */
+@media(orientation:landscape) and (min-width:640px){
+header .top,header #hb{display:contents!important}
+header .ib{display:flex;align-items:center;justify-content:center;flex:none;order:9;width:32px;height:32px;padding:6px}
+header nav{order:5}
+}
+
+/* tombol WhatsApp lapor bug / maintenance (khusus landscape) */
+.wa{display:none}
+@media(orientation:landscape) and (min-width:640px){
+header .wa{display:flex;align-items:center;gap:8px;flex:none;order:8;height:34px;padding:0 11px 0 8px;border-radius:8px;text-decoration:none;color:#e6ebf0;border:1px solid #0a0c0e;background:linear-gradient(#56616d,#3e4751 50%,#343c45 51%,#3a434c);box-shadow:inset 0 1px #7f8d9a,0 2px 3px #000a;transition:transform .14s cubic-bezier(.22,1,.36,1),filter .2s;-webkit-tap-highlight-color:transparent}
+header .wa:active{transform:translateY(2px);filter:brightness(.9)}
+header .wa svg{width:21px;height:21px;flex:none;color:#25d366;filter:drop-shadow(0 1px 1px #000a)}
+header .wa .wal{display:flex;flex-direction:column;gap:3px;white-space:nowrap}
+header .wa b{font:800 8.5px/1 system-ui,-apple-system,"Segoe UI",Roboto,sans-serif;letter-spacing:.06em;color:#e6ebf0}
+header .wa i{font:700 10px/1 ui-monospace,Menlo,monospace;font-style:normal;letter-spacing:.04em;color:#7be09a}
+/* di halaman yang punya tab (Kanal/Sinyal/Sistem) tinggal ikon supaya tab tetap lega */
+header:has(nav:not([style*="none"]) button) .wa{padding:0 7px}
+header:has(nav:not([style*="none"]) button) .wa .wal{display:none}
+}
+
+/* landscape: ikon rumah/menu/pengaturan mepet ke kanan, WA menyesuaikan */
+@media(orientation:landscape) and (min-width:640px){
+header{padding-right:max(6px,env(safe-area-inset-right))}
+header .wa{margin-right:auto}
+header .ib{margin-left:0}
+}
 `,THM=[['SS-24',38,1],['Biru',212,1],['Teal',172,1],['Hijau',108,.75],['Ungu',268,.9],['Oranye',20,1],['Merah',350,.9],['Perak',0,0]];
 let thI=Math.min(THM.length-1,+localStorage.gpTh||0);const thS=document.createElement('style');document.head.append(thS);
 function shc(m,sm,dh){let r=parseInt(m.substr(1,2),16)/255,g=parseInt(m.substr(3,2),16)/255,b=parseInt(m.substr(5,2),16)/255;const al=m.length>7?m.substr(7):'',mx=Math.max(r,g,b),mn=Math.min(r,g,b),l=(mx+mn)/2,d=mx-mn;if(d<.02)return m;
