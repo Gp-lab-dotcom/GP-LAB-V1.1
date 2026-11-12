@@ -381,7 +381,7 @@ const TABS=[['home','Home'],['in','Input'],['out','Output'],['xo','Crossover'],[
 const HERO='<span class="lgw" style="--lg:url('+LOGO_SRC+')"><img src="'+LOGO_SRC+'" alt="'+BRAND+'"></span>';
 const LOGO=LOGO_SRC?`<img src="${LOGO_SRC}" alt="${BRAND}">`:`<svg viewBox="0 0 64 64"><rect x="2" y="2" width="60" height="60" rx="14" fill="#121418" stroke="#ff2a2a" stroke-width="3"/><text x="32" y="38" text-anchor="middle" font-family="system-ui" font-weight="800" font-style="italic" font-size="24" fill="#ff2a2a">FE</text><path d="M10 50h8l4-8 6 14 6-20 5 14h15" fill="none" stroke="#e6edf7" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/></svg>`;
 let D=[],dev,rx,tx,P={},U=[],PF=[],MA=[],GR=[],tab='home',c=2,bd=0,M=[-90,-90,-90,-90,-90,-90],R=[],on=0,buf='',cmds=[],pend={},pumping=0,rw=null,ST={theme:-1,sb:30},xfer=0,DV={};
-var grQ=0;const K=n=>n<2?'i'+n+'.':'o'+(n-1)+'.',upd=()=>U.forEach(f=>f()),gr=()=>{if(grQ)return;grQ=requestAnimationFrame(()=>{grQ=0;GR.forEach(f=>f())})};
+var grQ=0;const K=n=>n<2?'i'+n+'.':'o'+(n-1)+'.',upd=()=>U.forEach(f=>f()),gr=()=>{if(grQ)return;const run=()=>{if(!grQ)return;grQ=0;GR.forEach(f=>{try{f()}catch(e){}})};grQ=requestAnimationFrame(run);setTimeout(run,120)};
 const pfx=p=>+P[p+'fx']||FR[+P[p+'fi']];
 const fq=f=>f>=1000?(f/1000).toFixed(2)+' kHz':f.toFixed(f<100?1:0)+' Hz';
 const sl=ms=>new Promise(r=>setTimeout(r,ms));
@@ -398,7 +398,7 @@ async function pump(){if(pumping||!rx||xfer)return;pumping=1;
   await sl(14)}
  pumping=0}
 const send=s=>{cmds.push(s);pump()};
-const put=(k,v)=>{P[k]=v;pend[k]=v;pump();gr()};
+const pendT={},put=(k,v)=>{P[k]=v;pend[k]=v;pendT[k]=Date.now();pump();gr()};
 let NM=[];
 function onN(e){const s=new TextDecoder().decode(e.target.value);
  if(s.startsWith('PN:')){NM=s.slice(3).split('|').map(q=>({f:q[0]=='1',n:q.slice(1)}));upd();return}
@@ -407,8 +407,8 @@ function onN(e){const s=new TextDecoder().decode(e.target.value);
  if(s[0]=='G'&&s[1]==':'){D=s.slice(2).split(',').map(Number);lastG=Date.now();PF.forEach(f=>f());return}
  if(s[0]=='M'&&s[1]==':'){const a=s.slice(2).split(',').map(Number);if(a.length<6||a.some(isNaN))return;lastM=Date.now();M=a;PF.forEach(f=>f());return}
  if(s[0]=='R'&&s[1]==':'){const a=s.slice(2).split(',').map(Number);if(!a.length||a.every(isNaN))return;RN=a.filter(v=>!isNaN(v)).length;lastR=Date.now();R=Array.from({length:16},(_,i)=>isNaN(a[i])?-90:a[i]);PF.forEach(f=>f());return}
- if(s=='END'){upd();gr();return}
- if(s.includes('=')&&s.endsWith(';')){s.split(';').forEach(p=>{const i=p.indexOf('=');if(i>0)P[p.slice(0,i)]=+p.slice(i+1)});upd();gr();return}
+ if(s=='END'){try{upd()}catch(e){}gr();return}
+ if(s.includes('=')&&s.endsWith(';')){s.split(';').forEach(p=>{const i=p.indexOf('=');if(i>0){const k=p.slice(0,i);if(!(k in pend)||Date.now()-(pendT[k]||0)>1500)P[k]=+p.slice(i+1)}});try{upd()}catch(e){}gr();return}
  if(rw){rw(s);rw=null}}
 const ask=(s,t)=>new Promise(r=>{rw=r;cmds.push(s);pump();setTimeout(()=>{if(rw==r){rw=null;r('TIMEOUT')}},t||3000)});
 let MSG='',MERR=0,step='',busyC=0;
